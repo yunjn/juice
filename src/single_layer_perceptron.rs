@@ -168,25 +168,16 @@ fn test_and() {
         .set_epoch(100)
         .set_learning_rate(0.01)
         .set_baise(0.4)
-        .load_dataset(DataSet { x, y })
+        .load_dataset(DataSet {
+            x: x.clone(),
+            y: y.clone(),
+        })
         .set_activation_function(and)
         .train();
 
-    let input = vec![1.0, 1.0];
-    let predict = model.predict(&input);
-    assert_eq!(predict, 1.0);
-
-    let input = vec![1.0, 0.0];
-    let predict = model.predict(&input);
-    assert_eq!(predict, 0.0);
-
-    let input = vec![0.0, 1.0];
-    let predict = model.predict(&input);
-    assert_eq!(predict, 0.0);
-
-    let input = vec![0.0, 0.0];
-    let predict = model.predict(&input);
-    assert_eq!(predict, 0.0);
+    let mut predicts: Vec<f64> = Vec::new();
+    x.iter().for_each(|x_| predicts.push(model.predict(x_)));
+    assert_eq!(predicts, y);
 }
 
 #[test]
@@ -211,25 +202,16 @@ fn test_or() {
         .set_epoch(100)
         .set_learning_rate(0.01)
         .set_baise(0.4)
-        .load_dataset(DataSet { x, y })
+        .load_dataset(DataSet {
+            x: x.clone(),
+            y: y.clone(),
+        })
         .set_activation_function(or)
         .train();
 
-    let input = vec![1.0, 1.0];
-    let predict = model.predict(&input);
-    assert_eq!(predict, 1.0);
-
-    let input = vec![1.0, 0.0];
-    let predict = model.predict(&input);
-    assert_eq!(predict, 1.0);
-
-    let input = vec![0.0, 1.0];
-    let predict = model.predict(&input);
-    assert_eq!(predict, 1.0);
-
-    let input = vec![0.0, 0.0];
-    let predict = model.predict(&input);
-    assert_eq!(predict, 0.0);
+    let mut predicts: Vec<f64> = Vec::new();
+    x.iter().for_each(|x_| predicts.push(model.predict(x_)));
+    assert_eq!(predicts, y);
 }
 
 #[test]
@@ -238,7 +220,7 @@ fn test_not() {
 
     let y = vec![1.0, 0.0];
 
-    let or = Box::new(|x: f64| -> f64 {
+    let not = Box::new(|x: f64| -> f64 {
         match x.partial_cmp(&0.0) {
             Some(std::cmp::Ordering::Greater) => 1.0,
             _ => 0.0,
@@ -249,17 +231,16 @@ fn test_not() {
         .set_epoch(100)
         .set_learning_rate(0.01)
         .set_baise(0.4)
-        .load_dataset(DataSet { x, y })
-        .set_activation_function(or)
+        .load_dataset(DataSet {
+            x: x.clone(),
+            y: y.clone(),
+        })
+        .set_activation_function(not)
         .train();
 
-    let input = vec![1.0];
-    let predict = model.predict(&input);
-    assert_eq!(predict, 0.0);
-
-    let input = vec![0.0];
-    let predict = model.predict(&input);
-    assert_eq!(predict, 1.0);
+    let mut predicts: Vec<f64> = Vec::new();
+    x.iter().for_each(|x_| predicts.push(model.predict(x_)));
+    assert_eq!(predicts, y);
 }
 
 #[test]
@@ -292,8 +273,6 @@ fn test_xor() {
         .train();
 
     let mut predicts: Vec<f64> = Vec::new();
-    for x_ in x.iter() {
-        predicts.push(model.predict(x_));
-    }
+    x.iter().for_each(|x_| predicts.push(model.predict(x_)));
     assert_ne!(predicts, y);
 }

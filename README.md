@@ -1,6 +1,6 @@
 <div align="center">
 
-## 一些DL算法实现
+## 一些 DL 算法实现
 
 </div>
 
