@@ -9,9 +9,9 @@ pub struct DataSet {
 }
 
 pub struct SingleLayerPerceptron {
-    learning_rate: f64,      // 学习率
+    lr: f64,                 // 学习率
     baise: f64,              // 偏置
-    epoch: usize,            // 代
+    epochs: usize,           // 代
     dim: usize,              // 维度
     w: Vec<f64>,             // 权值
     dataset: DataSet,        // 数据集
@@ -22,8 +22,8 @@ pub struct SingleLayerPerceptron {
 impl SingleLayerPerceptron {
     pub fn new() -> Self {
         Self {
-            epoch: 0,
-            learning_rate: 0.01,
+            epochs: 0,
+            lr: 0.01,
             baise: 0.4,
             dim: 0,
             w: vec![0.0],
@@ -44,29 +44,26 @@ impl SingleLayerPerceptron {
     }
 
     pub fn set_activation_function(self, activation_function: AF) -> Self {
-        SingleLayerPerceptron {
+        Self {
             activation_function,
             ..self
         }
     }
 
-    pub fn set_epoch(self, epoch: usize) -> Self {
-        SingleLayerPerceptron { epoch, ..self }
+    pub fn set_epochs(self, epochs: usize) -> Self {
+        Self { epochs, ..self }
     }
 
-    pub fn set_learning_rate(self, learning_rate: f64) -> Self {
-        SingleLayerPerceptron {
-            learning_rate,
-            ..self
-        }
+    pub fn set_learning_rate(self, lr: f64) -> Self {
+        Self { lr, ..self }
     }
 
     pub fn set_baise(self, baise: f64) -> Self {
-        SingleLayerPerceptron { baise, ..self }
+        Self { baise, ..self }
     }
 
     pub fn enable_log(self) -> Self {
-        SingleLayerPerceptron {
+        Self {
             logger: true,
             ..self
         }
@@ -77,7 +74,7 @@ impl SingleLayerPerceptron {
             println!("x.len() != y.len()")
         }
 
-        SingleLayerPerceptron {
+        Self {
             dim: dataset.x[0].len(),
             w: vec![0.3; dataset.x[0].len()],
             dataset,
@@ -101,7 +98,7 @@ impl SingleLayerPerceptron {
     }
 
     pub fn train(mut self) -> Self {
-        for _ep in 0..self.epoch {
+        for _ep in 0..self.epochs {
             let mut errors = 0.0;
             let mut r = 0.0;
             let mut output = 0.0;
@@ -113,7 +110,7 @@ impl SingleLayerPerceptron {
                     continue;
                 }
 
-                r = self.learning_rate * (y - output);
+                r = self.lr * (y - output);
                 self.baise += r;
 
                 x.iter().zip(self.w.iter_mut()).for_each(|(x_, w_)| {
@@ -134,7 +131,7 @@ impl SingleLayerPerceptron {
                 break;
             }
         }
-        SingleLayerPerceptron { ..self }
+        Self { ..self }
     }
 
     pub fn predict(&self, x: &Vec<f64>) -> f64 {
@@ -165,7 +162,7 @@ fn test_and() {
     });
 
     let model = SingleLayerPerceptron::new()
-        .set_epoch(100)
+        .set_epochs(100)
         .set_learning_rate(0.01)
         .set_baise(0.4)
         .load_dataset(DataSet {
@@ -199,7 +196,7 @@ fn test_or() {
     });
 
     let model = SingleLayerPerceptron::new()
-        .set_epoch(100)
+        .set_epochs(100)
         .set_learning_rate(0.01)
         .set_baise(0.4)
         .load_dataset(DataSet {
@@ -228,7 +225,7 @@ fn test_not() {
     });
 
     let model = SingleLayerPerceptron::new()
-        .set_epoch(100)
+        .set_epochs(100)
         .set_learning_rate(0.01)
         .set_baise(0.4)
         .load_dataset(DataSet {
@@ -262,7 +259,7 @@ fn test_xor() {
     });
 
     let model = SingleLayerPerceptron::new()
-        .set_epoch(100)
+        .set_epochs(100)
         .set_learning_rate(0.01)
         .set_baise(0.4)
         .load_dataset(DataSet {
@@ -275,4 +272,32 @@ fn test_xor() {
     let mut predicts: Vec<f64> = Vec::new();
     x.iter().for_each(|x_| predicts.push(model.predict(x_)));
     assert_ne!(predicts, y);
+}
+
+#[test]
+fn test_data() {
+    let x = vec![
+        vec![1.0, 0.0, 0.0],
+        vec![1.0, 0.0, 1.0],
+        vec![1.0, 1.0, 0.0],
+        vec![1.0, 1.0, 1.0],
+        vec![0.0, 0.0, 1.0],
+        vec![0.0, 1.0, 0.0],
+        vec![0.0, 1.0, 1.0],
+        vec![0.0, 0.0, 0.0],
+    ];
+
+    let y = vec![-1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0];
+
+    let model = SingleLayerPerceptron::new()
+        .set_epochs(100)
+        .set_learning_rate(0.01)
+        .set_baise(0.3)
+        .load_dataset(DataSet { x, y })
+        // .enable_log()
+        .train();
+
+    let input = vec![0.0, 1.0, 1.0];
+    let predict = model.predict(&input);
+    assert_eq!(1.0, predict);
 }
