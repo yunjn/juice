@@ -3,6 +3,8 @@
 use crate::data::*;
 use ndarray::prelude::*;
 use ndarray::{Array, Axis, RemoveAxis};
+use std::io::{BufRead, BufReader};
+use std::{fs::File, path::Path};
 
 pub struct Perceptron {
     logger: bool,             // 记录
@@ -10,6 +12,37 @@ pub struct Perceptron {
     step_size: f64,           // 步长
     baise: f64,               // 偏置
     weights: Array<f64, Ix2>, // 权值
+}
+
+impl LabeledDataLoader for Perceptron {
+    fn from_csv(path: impl AsRef<Path>) -> L1D2 {
+        let f = File::open(path).expect("File does not exist!");
+        let br = BufReader::new(f);
+
+        let mut labels: Vec<f64> = Vec::new();
+        let mut records: Vec<_> = Vec::new();
+
+        for line in br.lines() {
+            let line = line.unwrap();
+            let line: Vec<&str> = line.split(',').collect();
+
+            // 二分类任务，所以将 >=5 的作为 1，<5 为 -1
+            if line[0].to_string().parse::<f64>().unwrap() >= 5.0 {
+                labels.push(1.0);
+            } else {
+                labels.push(-1.0);
+            }
+
+            line.iter()
+                .skip(1)
+                .for_each(|num| records.push(num.to_string().parse::<f64>().unwrap() / 255.0));
+        }
+
+        LabeledDataset::new(
+            Array::from_shape_vec((labels.len(), records.len() / labels.len()), records).unwrap(),
+            Array::from_vec(labels),
+        )
+    }
 }
 
 impl Perceptron {
@@ -79,8 +112,8 @@ impl Perceptron {
 
 #[test]
 fn test_perceptron() {
-    let train_data = LabeledDataLoader::from_csv("assets/mnist_train.csv");
-    let test_data = LabeledDataLoader::from_csv("assets/mnist_test.csv");
+    let train_data = Perceptron::from_csv("assets/mnist_train.csv");
+    let test_data = Perceptron::from_csv("assets/mnist_test.csv");
 
     let model = Perceptron::new()
         .set_epochs(50)
