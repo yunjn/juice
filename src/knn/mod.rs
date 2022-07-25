@@ -71,7 +71,7 @@ impl Knn {
         (x1 - x2).mapv(|a| a.powi(2)).sum().sqrt() // 欧氏距
     }
 
-    pub fn get_closest(&self, labeled_dataset: &L1D2, x: &Array<f64, Ix1>) -> usize {
+    pub fn get_closest(&mut self, labeled_dataset: &L1D2, x: &Array<f64, Ix1>) -> usize {
         let (m, n) = labeled_dataset.records().dim();
         let mut dist_list: Array<f64, Ix1> = Array::zeros(m);
 
@@ -93,10 +93,20 @@ impl Knn {
             label_list[idx] += 1;
         });
 
-        label_list.iter().enumerate().max().unwrap().0
+        let mut max = 0;
+        let mut res = 0;
+
+        for (idx, x) in label_list.iter().enumerate() {
+            if max <= *x {
+                max = *x;
+                res = idx;
+            }
+        }
+
+        res
     }
 
-    pub fn model_test(&self, train_data: L1D2, test_data: L1D2) -> f64 {
+    pub fn model_test(&mut self, train_data: L1D2, test_data: L1D2) -> f64 {
         let mut err_cnt = 0;
         let mut idx = 1;
         let (m, n) = test_data.records().dim();
@@ -105,22 +115,24 @@ impl Knn {
             .records()
             .outer_iter()
             .zip(test_data.labels().iter())
-            .take(200)
+            // .take(200)
             .for_each(|(xi, yi)| {
+                if *yi as usize != self.get_closest(&train_data, &xi.to_owned()) {
+                    err_cnt += 1;
+                }
+
                 if self.logger {
                     println!(
-                        "test: {}/200 acc: {}",
+                        "test: {}/{} acc: {}",
                         idx,
+                        m,
                         1.0 - (err_cnt as f64 / idx as f64)
                     );
                     idx += 1;
                 }
-
-                if *yi as usize != self.get_closest(&train_data, &xi.to_owned()) {
-                    err_cnt += 1;
-                }
             });
-        1.0 - (err_cnt as f64 / 200.0)
+        // 1.0 - (err_cnt as f64 / 200.0)
+        1.0 - (err_cnt as f64 / m as f64)
     }
 }
 
