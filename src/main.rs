@@ -1,6 +1,7 @@
-mod data;
-mod knn;
-mod perceptron;
+pub mod data;
+pub mod knn;
+pub mod log;
+pub mod perceptron;
 
 use data::*;
 use knn::*;
@@ -8,10 +9,7 @@ use knn::*;
 fn main() {
     let train_data = Knn::from_csv("assets/mnist_train.csv");
     let test_data = Knn::from_csv("assets/mnist_test.csv");
-    let acc = Knn::new()
-        .enable_log()
-        .set_topk(25)
-        .model_test(train_data, test_data);
-    println!("{}", acc);
-    println!("hello juice");
+    let mut model = Knn::new().enable_log().set_topk(25);
+    let acc = model.model_test(train_data, test_data);
+    sparkle!("acc: {}", acc);
 }

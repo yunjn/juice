@@ -1,8 +1,8 @@
 #![allow(unused)]
 use crate::data::*;
+use crate::info;
 use ndarray::prelude::*;
-use ndarray::{Array, Data};
-use std::cmp::Ordering;
+use ndarray::Array;
 use std::io::{BufRead, BufReader};
 use std::{fs::File, path::Path};
 
@@ -11,18 +11,9 @@ pub struct Knn {
     topk: usize,  // 邻近点
 }
 
-pub fn argsort_by<S, F>(arr: &ArrayBase<S, Ix1>, mut compare: F) -> Vec<usize>
-where
-    S: Data,
-    F: FnMut(&S::Elem, &S::Elem) -> Ordering,
-{
-    let mut indices: Vec<usize> = (0..arr.len()).collect();
-    indices.sort_unstable_by(move |&i, &j| compare(&arr[i], &arr[j]));
-    indices
-}
-
 impl LabeledDataLoader for Knn {
     fn from_csv(path: impl AsRef<Path>) -> L1D2 {
+        info!("loading the data set.");
         let f = File::open(path).expect("File does not exist!");
         let br = BufReader::new(f);
 
@@ -31,6 +22,7 @@ impl LabeledDataLoader for Knn {
 
         for line in br.lines() {
             let line = line.unwrap();
+
             let line: Vec<&str> = line.split(',').collect();
 
             labels.push(line[0].to_string().parse::<f64>().unwrap());
@@ -115,14 +107,14 @@ impl Knn {
             .records()
             .outer_iter()
             .zip(test_data.labels().iter())
-            // .take(200)
+            .take(200)
             .for_each(|(xi, yi)| {
                 if *yi as usize != self.get_closest(&train_data, &xi.to_owned()) {
                     err_cnt += 1;
                 }
 
                 if self.logger {
-                    println!(
+                    info!(
                         "test: {}/{} acc: {}",
                         idx,
                         m,

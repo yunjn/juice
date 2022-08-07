@@ -1,5 +1,7 @@
 #![allow(unused)]
-use ndarray::{Array, Axis, Dim, RemoveAxis};
+use ndarray::prelude::*;
+use ndarray::{Array, Axis, Data, Dim, RemoveAxis};
+use std::cmp::Ordering;
 use std::path::Path;
 
 pub struct LabeledDataset<D1, D2> {
@@ -39,6 +41,17 @@ pub trait LabeledDataLoader {
     fn from_csv(path: impl AsRef<Path>) -> L1D2 {
         LabeledDataset::new(Array::default((0, 0)), Array::default(0))
     }
+}
+
+// 返回
+pub fn argsort_by<S, F>(arr: &ArrayBase<S, Ix1>, mut compare: F) -> Vec<usize>
+where
+    S: Data,
+    F: FnMut(&S::Elem, &S::Elem) -> Ordering,
+{
+    let mut indices: Vec<usize> = (0..arr.len()).collect();
+    indices.sort_unstable_by(move |&i, &j| compare(&arr[i], &arr[j]));
+    indices
 }
 
 // #[test]
