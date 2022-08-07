@@ -1,6 +1,6 @@
 <div align="center">
 
-## 一些 DL 算法实现
+## juice
 
 </div>
 
@@ -27,10 +27,8 @@ println!("acc: {}", acc);
 ```Rust
 let train_data = Knn::from_csv("assets/mnist_train.csv");
 let test_data = Knn::from_csv("assets/mnist_test.csv");
-let acc = Knn::new()
-    .enable_log()
-    .set_topk(25)
-    .model_test(train_data, test_data);
+let mut model = Knn::new().enable_log().set_topk(25);
+let acc = model.model_test(train_data, test_data);
 println!("acc: {}", acc);
 ```
 
